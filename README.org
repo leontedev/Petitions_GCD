@@ -1,7 +1,9 @@
 * Petitions with GCD
 Project 9 - Day 39 - www.hackingwithswift.com/100/39
+
 Modify project 7 (Petitions) to use GCD for performing the data fetching & parsing on a background thread.
 [[gif.gif]]
+
 ** Day 39
 
 *** GCD using async()
