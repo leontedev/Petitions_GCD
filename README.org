@@ -1,3 +1,47 @@
 * Petitions with GCD
 Project 9 - Day 39 - www.hackingwithswift.com/100/39
 
+** Day 39
+
+*** GCD using async()
+Moved the json fetching and parsing to a background thread:
+#+BEGIN_SRC Swift
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            if let url = URL(string: urlString) {
+                if let data = try? Data(contentsOf: url) {
+                    self?.parse(data: data)
+                    return
+                }
+            }
+            
+            self?.showError()
+        }
+#+END_SRC
+However both parse() and showError() contain some UI code.
+So we are going to "mark" the UI code to be done back on the main thread:
+#+BEGIN_SRC Swift
+            DispatchQueue.main.async { [weak self] in
+                self?.tableView.reloadData()
+            }
+#+END_SRC
+And similarly for the entire showError() function.
+
+*** GCD using performSelector
+
+Use performSelector(inBackground:) to move work off the main thread:
+
+#+BEGIN_SRC Swift
+performSelector(inBackground: #selector(fetchJSON), with: nil)
+#+END_SRC
+
+And performSelector(onMainThread:) to perform it on the main thread:
+
+#+BEGIN_SRC Swift
+performSelector(onMainThread: #selector(showError), with: nil, waitUntilDone: false)
+#+END_SRC
+
+And for the tableView.reloadData() call:
+
+#+BEGIN_SRC Swift
+tableView.performSelector(onMainThread: #selector(UITableView.reloadData), with: nil, waitUntilDone: false)
+#+END_SRC

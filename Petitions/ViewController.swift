@@ -20,6 +20,10 @@ class ViewController: UITableViewController {
         
         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Filter", style: .plain, target: self, action: #selector(filterResults))
         
+        performSelector(inBackground: #selector(fetchJSON), with: nil)
+    }
+    
+    @objc func fetchJSON() {
         var urlString: String
         
         if navigationController?.tabBarItem.tag == 0 {
@@ -30,20 +34,14 @@ class ViewController: UITableViewController {
             urlString = "https://api.whitehouse.gov/v1/petitions.json?signatureCountFloor=10000&limit=100"
         }
         
-        
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            if let url = URL(string: urlString) {
-                if let data = try? Data(contentsOf: url) {
-                    self?.parse(data: data)
-                    return
-                }
+        if let url = URL(string: urlString) {
+            if let data = try? Data(contentsOf: url) {
+                parse(data: data)
+                return
             }
-            
-            self?.showError()
         }
         
-        
-        
+        performSelector(onMainThread: #selector(showError), with: nil, waitUntilDone: false)
     }
     
     @objc func filterResults() {
@@ -75,20 +73,14 @@ class ViewController: UITableViewController {
             self.filteredPetitions = petitions.results
             
             // UI should be done back on the on the Main Thread
-            DispatchQueue.main.async { [weak self] in
-                self?.tableView.reloadData()
-            }
+            tableView.performSelector(onMainThread: #selector(UITableView.reloadData), with: nil, waitUntilDone: false)
         }
     }
     
-    func showError() {
-        DispatchQueue.main.async { [weak self] in
-            let ac = UIAlertController(title: "Error", message: "There was a problem loading the page. Try again later", preferredStyle: .alert)
-            
-            ac.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-            
-            self?.present(ac, animated: true )
-        }
+    @objc func showError() {
+        let ac = UIAlertController(title: "Error", message: "There was a problem loading the page. Try again later", preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        present(ac, animated: true)
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
